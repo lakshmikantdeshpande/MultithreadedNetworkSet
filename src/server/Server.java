@@ -15,11 +15,11 @@ public class Server implements Runnable {
     private static final int POOL_SIZE = getProcessorCount();
     private Socket socket;
     private ServerSocket serverSocket;
-    private ServerStore serverStore;
+    private Store store;
     private boolean shutdown;
 
     private Server() {
-        serverStore = new ServerStore();
+        store = new ServerStore();
     }
 
     private static int getProcessorCount() {
@@ -58,7 +58,7 @@ public class Server implements Runnable {
 
     private void serveRequest(ExecutorService executorService) throws IOException {
         Socket clientSocket = serverSocket.accept();
-        RequestHandler handler = new RequestHandler(serverStore, clientSocket);
+        RequestHandler handler = new RequestHandler(store, clientSocket);
         executorService.execute(handler);
     }
 }

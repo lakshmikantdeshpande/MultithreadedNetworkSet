@@ -13,10 +13,10 @@ import static constants.AppConstants.EXIT_CODE;
 
 public class RequestHandler implements Runnable {
 
-    private final ServerStore store;
+    private final Store store;
     private final Socket socket;
 
-    RequestHandler(ServerStore store, Socket socket) {
+    RequestHandler(Store store, Socket socket) {
         this.store = store;
         this.socket = socket;
     }

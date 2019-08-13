@@ -1,12 +1,19 @@
 package server;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.stream.Collectors;
 
-public class ServerStore {
+import static java.util.Map.Entry.comparingByValue;
+
+public class ServerStore implements Store {
 
     private final Map<Integer, Integer> setIdToScoreMap;
     private final Map<Integer, Set<Integer>> setIdToSetMap;
@@ -16,6 +23,7 @@ public class ServerStore {
         setIdToScoreMap = new TreeMap<>();
     }
 
+    @Override
     public void put(int setId, int key, int score) {
         synchronized (setIdToScoreMap) {
             boolean setExists = doesSetExist(setId);
@@ -38,6 +46,7 @@ public class ServerStore {
         }
     }
 
+    @Override
     public void remove(int setId, int key) {
         synchronized (setIdToScoreMap) {
             boolean setExists = doesSetExist(setId);
@@ -48,6 +57,7 @@ public class ServerStore {
         }
     }
 
+    @Override
     public int size(int setId) {
         synchronized (setIdToScoreMap) {
             boolean setExists = doesSetExist(setId);
@@ -58,6 +68,7 @@ public class ServerStore {
         }
     }
 
+    @Override
     public int getKeyValue(int setId, int key) {
         synchronized (setIdToScoreMap) {
             if (!doesSetExist(setId)) {
@@ -68,6 +79,35 @@ public class ServerStore {
             }
             return 0;
         }
+    }
+
+    @Override
+    public List<Integer> getRange(int lower, int upper, int... setIds) {
+        synchronized (setIdToScoreMap) {
+            Map<Integer, Integer> map = new HashMap<>();
+            for (int setId : setIds) {
+                if (setIdToScoreMap.containsKey(setId))
+                    map.put(setId, setIdToScoreMap.get(setId));
+            }
+            map = sortByKey(map);
+            return mapToList(map);
+        }
+    }
+
+    private List<Integer> mapToList(Map<Integer, Integer> map) {
+        List<Integer> list = new ArrayList<>(map.size() * 2);
+        for (Map.Entry<Integer, Integer> entry : map.entrySet()) {
+            list.add(entry.getKey());
+            list.add(entry.getValue());
+        }
+        return list;
+    }
+
+    private Map<Integer, Integer> sortByKey(Map<Integer, Integer> map) {
+        return map.entrySet().stream().
+                sorted(comparingByValue()).
+                collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue,
+                        (e1, e2) -> e1, LinkedHashMap::new));
     }
 
     private boolean doesSetExist(int setId) {
